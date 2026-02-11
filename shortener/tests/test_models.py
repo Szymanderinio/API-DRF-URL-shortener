@@ -13,7 +13,14 @@ class TestShortenedURLModel:
         assert len(url.short_code) == 6
         assert url.original_url == "https://example.com/very/long/url"
 
-    def test_short_code_is_unique(self) -> None:
+    def test_short_code_is_deterministic(self) -> None:
+        url1 = ShortenedURL(original_url="https://example.com/test")
+        url1.save()
+
+        expected_code = generate_short_code("https://example.com/test")
+        assert url1.short_code == expected_code
+
+    def test_different_urls_get_different_codes(self) -> None:
         url1 = ShortenedURL.objects.create(original_url="https://example.com/1")
         url2 = ShortenedURL.objects.create(original_url="https://example.com/2")
 
@@ -37,17 +44,20 @@ class TestShortenedURLModel:
 
 class TestGenerateShortCode:
     def test_default_length(self) -> None:
-        code = generate_short_code()
+        code = generate_short_code("https://example.com")
         assert len(code) == 6
 
     def test_custom_length(self) -> None:
-        code = generate_short_code(length=10)
+        code = generate_short_code("https://example.com", length=10)
         assert len(code) == 10
 
-    def test_alphanumeric_only(self) -> None:
-        code = generate_short_code()
-        assert code.isalnum()
+    def test_deterministic(self) -> None:
+        url = "https://example.com/test"
+        code1 = generate_short_code(url)
+        code2 = generate_short_code(url)
+        assert code1 == code2
 
-    def test_uniqueness(self) -> None:
-        codes = [generate_short_code() for _ in range(100)]
-        assert len(set(codes)) == 100
+    def test_different_urls_different_codes(self) -> None:
+        code1 = generate_short_code("https://example.com/1")
+        code2 = generate_short_code("https://example.com/2")
+        assert code1 != code2

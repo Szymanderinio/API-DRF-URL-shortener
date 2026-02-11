@@ -12,7 +12,7 @@ class ShortenedURL(models.Model):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.short_code:
-            self.short_code = generate_short_code()
+            self.short_code = generate_short_code(self.original_url)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

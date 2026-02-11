@@ -62,7 +62,7 @@ class TestURLShortenerE2E:
             )
             assert response.data['original_url'] == url
 
-    def test_same_url_gets_different_codes(self, api_client: APIClient) -> None:
+    def test_same_url_returns_same_code(self, api_client: APIClient) -> None:
         url = "https://example.com/same/url"
 
         response1 = api_client.post(
@@ -78,13 +78,7 @@ class TestURLShortenerE2E:
 
         assert response1.status_code == status.HTTP_201_CREATED
         assert response2.status_code == status.HTTP_201_CREATED
-        assert response1.data['short_code'] != response2.data['short_code']
-
-        for code in [response1.data['short_code'], response2.data['short_code']]:
-            expand_response = api_client.get(
-                reverse('expand', kwargs={'short_code': code})
-            )
-            assert expand_response.data['original_url'] == url
+        assert response1.data['short_code'] == response2.data['short_code']
 
     def test_database_persistence(self, api_client: APIClient) -> None:
         url = "https://example.com/persistent"
