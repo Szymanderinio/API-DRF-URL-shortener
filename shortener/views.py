@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework import status
@@ -18,12 +19,22 @@ class ShortenURLView(APIView):
         serializer = ShortenURLSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        shortened_url = ShortenedURL.objects.create(
-            original_url=serializer.validated_data['url']
+        shortened_url = self._create_with_unique_code(
+            serializer.validated_data['url']
         )
 
         response_serializer = ShortenedURLResponseSerializer(shortened_url)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def _create_with_unique_code(
+        self, original_url: str, max_attempts: int = 10
+    ) -> ShortenedURL:
+        for _ in range(max_attempts):
+            try:
+                return ShortenedURL.objects.create(original_url=original_url)
+            except IntegrityError:
+                continue
+        raise IntegrityError("Could not generate unique short code")
 
 
 class ExpandURLView(APIView):

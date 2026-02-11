@@ -8,6 +8,7 @@ Minimalistyczne API do skracania URLi w Django REST Framework.
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+export SECRET_KEY="your-secret-key"
 python manage.py migrate
 python manage.py runserver
 ```
